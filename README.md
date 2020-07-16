@@ -61,3 +61,4 @@ Run ./modify-plasma-image. It will:
 * Follow the prompts of pm-flash
 * If it doesn't work, you may have to reinstall the vendor files (this may be necessary depending on which version of Android
   was installed on the device before) by running "sudo ./flash-vendor"
+* The PIN for the screen lock (and password for ssh access) is 1234
