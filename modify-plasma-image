@@ -1,0 +1,62 @@
+#!/bin/sh
+
+OMV_VERSION=cooker
+ARCH=aarch64
+QEMUARCH=$ARCH
+PM_VERSION="$(curl https://images.plasma-mobile.org/rootfs_stamp 2>/dev/null)"
+
+cd "$(dirname $0)"
+
+if [ "$(id -u)" != "0" ]; then
+	echo "We need to run as root so we can create device nodes."
+	echo "Relaunching with sudo..."
+	echo
+	exec sudo $0 "$@"
+	exit 1
+fi
+
+[ -e pm-rootfs-$PM_VERSION.tar.gz ] || wget https://images.plasma-mobile.org/rootfs/pm-rootfs-$PM_VERSION.tar.gz
+rm -rf omv-preview-rootfs
+mkdir omv-preview-rootfs
+cd omv-preview-rootfs
+tar xf ../pm-rootfs-$PM_VERSION.tar.gz
+cd ..
+
+# Poor man's version of "dnf install --installroot=" --
+# need to get the repository configs from rpm packages
+# without having the repositories configured...
+PKGS=http://abf-downloads.openmandriva.org/$OMV_VERSION/repository/$ARCH/main/release/
+echo $PKGS
+curl -s -L $PKGS |grep '^<a' |cut -d'"' -f2 >PACKAGES
+PRE_PACKAGES="distro-release-repos"
+for i in $PRE_PACKAGES; do
+	P=`grep "^$i-[0-9].*" PACKAGES`
+	if [ "$?" != "0" ]; then
+		echo "Can't find $i package for target" >&2
+		exit 1
+	fi
+	curl -O $PKGS/$P
+	rpm -r "$(pwd)/omv-preview-rootfs" -Uvh --ignorearch --nodeps $P
+done
+
+if ! $NATIVEBUILD; then
+	# Make sure we can run %post scripts in the chroot
+	cp /usr/bin/qemu-$QEMUARCH-static omv-preview-rootfs/usr/bin/
+fi
+
+# FIXME allow better package selection
+PACKAGES="dnf distro-release-repos-keys distro-release-repos-pkgprefs vim-enhanced"
+#dnf -y install --nogpgcheck --installroot="$(pwd)/omv-preview-rootfs" --releasever=$OMV_VERSION --forcearch=$ARCH $PACKAGES
+
+# We're done running %post scripts, so we no longer need
+# qemu in the rootfs
+rm -f omv-preview-rootfs/usr/bin/qemu-$QEMUARCH-static
+
+# Overwrite some stuff from the PM reference build
+rm -f omv-preview-rootfs/usr/share/wallpapers/Next/contents/images/*
+cp -f 1080x1920.jpg omv-preview-rootfs/usr/share/wallpapers/Next/contents/images/
+
+# Recompress it
+cd omv-preview-rootfs
+tar czf ../omv-preview-$PM_VERSION.tar.gz *
+cd ..

@@ -1,0 +1,46 @@
+#!/bin/bash
+set -ex
+
+CACHEDIR=cache
+
+function confirm() {
+# call with a prompt string or use a default
+    read -r -p "${1:-Are you sure? [y/N]} " response
+        case $response in
+        [yY][eE][sS]|[yY])
+        true
+            ;;
+    *)
+        false
+        ;;
+    esac
+}
+
+echo "Waiting for device to be in the fastboot mode"
+fastboot getvar product
+
+DEVICE_NAME=`fastboot getvar product 2>&1 | head -1 | awk -F': ' '{print $2}'`
+confirm "Connected device is $DEVICE_NAME, is that correct? [y/N]" || exit 1
+
+while getopts "c" opt; do
+  case $opt in
+    c)
+	  echo "Option provided to use cache, not downloading files again"
+	  NOCACHE=1
+      ;;
+    \?)
+      echo "Invalid option: -$OPTARG" >&2
+      exit 1
+      ;;
+  esac
+done
+
+if [ "$DEVICE_NAME" == "bullhead" ]; then
+    mkdir -p $CACHEDIR
+    cd $CACHEDIR
+    if [ -z "$NOCACHE" ]; then
+        wget http://arm.bshah.in/bullhead-vendor.img
+    fi
+    fastboot flash vendor $DEVICE_NAME-vendor.img
+    fastboot continue
+fi
