@@ -57,5 +57,7 @@ Run ./modify-plasma-image. It will:
 
 * Unlock the bootloader as described here: https://forum.xda-developers.com/nexus-5x/general/guides-how-to-guides-beginners-t3206930
 * Boot the device into fastboot mode (Power off, then press Volume Down and hold it while turning the phone back on)
-* Run: sudo fastboot format cache; sudo fastboot format userdata; sudo ./pm-flash
+* Run: sudo ./pm-flash
 * Follow the prompts of pm-flash
+* If it doesn't work, you may have to reinstall the vendor files (this may be necessary depending on which version of Android
+  was installed on the device before) by running "sudo ./flash-vendor"

@@ -8,8 +8,8 @@ set -ex
 # - install the Plasma rootfs
 # - reboot
 
-sudo fastboot format cache
-sudo fastboot format userdata
+fastboot format cache
+fastboot format userdata
 
 CACHEDIR=cache
 
@@ -53,6 +53,9 @@ download()
         ROOTFS_VERSION=`curl https://images.plasma-mobile.org/rootfs_stamp 2> /dev/null`
 #        wget -c "https://images.plasma-mobile.org/rootfs/pm-rootfs-$ROOTFS_VERSION.tar.gz" -P rootfs
 	mkdir -p rootfs
+	if [ ! -e ../omv-preview-$ROOTFS_VERSION.tar.gz ]; then
+		wget -c "http://lindev.ch/omv-preview-$ROOTFS_VERSION.tar.gz" -P ..
+	fi
 	cp -f ../omv-preview-$ROOTFS_VERSION.tar.gz rootfs/pm-rootfs-$ROOTFS_VERSION.tar.gz
         ln -sf rootfs/pm-rootfs-$ROOTFS_VERSION.tar.gz pm-rootfs-latest.tar.gz
     fi
