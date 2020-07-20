@@ -39,6 +39,7 @@ for i in $PRE_PACKAGES; do
 	rpm -r "$(pwd)/omv-preview-rootfs" -Uvh --ignorearch --nodeps $P
 done
 
+USE_EXPERIMENTAL_OVERWRITES=true
 if [ "$USE_EXPERIMENTAL_OVERWRITES" = "true" ]; then
 	# Make sure we can run %post scripts in the chroot
 	cp /usr/bin/qemu-$QEMUARCH-static omv-preview-rootfs/usr/bin/
@@ -54,8 +55,8 @@ if [ "$USE_EXPERIMENTAL_OVERWRITES" = "true" ]; then
 	done
 
 	# FIXME allow better package selection
-	#PACKAGES="dnf distro-release-repos-keys distro-release-repos-pkgprefs vim-enhanced"
-	PACKAGES="distro-release-repos-keys distro-release-repos-pkgprefs rpm"
+	PACKAGES="dnf distro-release-repos-keys distro-release-repos-pkgprefs vim-enhanced"
+	#PACKAGES="distro-release-repos-keys distro-release-repos-pkgprefs rpm"
 	dnf -y install --nogpgcheck --installroot="$(pwd)/omv-preview-rootfs" --releasever=$OMV_VERSION --forcearch=$ARCH $PACKAGES
 
 	for i in $PRESERVE; do
